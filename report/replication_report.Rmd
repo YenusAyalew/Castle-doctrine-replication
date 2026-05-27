@@ -1,0 +1,376 @@
+---
+title: 'Castle Doctrine and Violent Crime: Replication and Extension'
+author: "Yenus Ibrahim Ayalew"
+date: "May 27, 2025"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Final Project: Cheng, Cheng, and Mark Hoekstra. 2013. "Does Strengthening Self-Defense Law Deter Crime or Escalate Violence? Evidence from Expansions to Castle Doctrine." *Journal of Human Resources* 48(3): 821--854.
+
+**By:** Yenus Ibrahim Ayalew
+**ID:** 25173530
+
+## Part 1: Paper Summary
+
+This paper examined whether legal justifications for the use of lethal self-defense through so-called Castle Doctrine laws deter violent crime or escalate homicide among the general population in the United States. More than 20 states in the United States have passed the Castle Doctrine law between 2000 and 2010. This law eliminated the duty to retreat outside the home, added presumptions of reasonable fear, and removed the civil liability for those who are in self-defense. There are two possible outcomes for this policy. First, they can increase the cost of criminals committing crimes, which results in a reduction of crime, but also lowers the legal requirement of using lethal force, which increases violence. So the researchers collected data to estimate in which direction each of the effects runs and how people responded to these changed incentives. The data were collected from FBI Uniform Crime Reports covering all 50 states from 2000 to 2010, with state-level measures of homicide, burglary, robbery, aggravated assault, justifiable homicide, and time-varying controls including policing rates, incarceration rates, poverty, unemployment, income, welfare spending, and demographics.
+
+The research question was whether the Castle Doctrine laws reduce the crime rate or increase homicide in the general population. The aim was to estimate the effect of adopting Castle Doctrine law on state-level crime outcomes. The ideal theoretical estimand was Average Treatment Effect on treated (ATT). The unit level quantity is the difference between the crime rate that the same state would have experienced had it not adopted, averaged over all adopting states after law passage. However, they could not use ATT because it is impossible to observe because it is impossible to observe the same state both with and without the law at the same time. This is the fundamental problem of causal inference. The Empirical Estimand used was Difference-in-Differences, exploiting variation in the timing of Castle Doctrine adoption across states.
+
+The dependent variable was the log of the homicide rate per 100,000 population as the primary outcome, and the log rates of burglary, robbery, and aggravated assault as deterrence outcomes. These were measured from the FBI Uniform Crime Reports, which cover all 50 states annually. The average homicide rate in the sample was 4.8 per 100,000 population. The treatment proportion of year $t$ in state $i$ had an effective Castle Doctrine law in place, coded as a fraction for states that adopted partway through a year. A total of 21 states adopted the law, while 29 states never did. States that did not adopt any Castle Doctrine law between 2000 and 2010 served as the control group throughout the study.
+
+The identification challenges in this study were that states did not randomly adopt the law. States that adopted were in the South and Midwest, raising the concern that regional crime trends rather than the laws themselves could explain any observed divergence in outcomes. These states had a long-term crime trajectory, a different demographic structure, and a higher baseline homicidal rate. Furthermore, thirteen of the twenty-one states passed the law in 2006 alone, showing clustering if any economic shock or a change in drug markets happened in these years, which affected Southern and Midwestern states, which means it could look exactly like a treatment effect even if the law itself did nothing. Other confounders can be if states have other policies that reduce or increase crime in the states, like policing practices.
+
+To address the identification challenge, first, they only compared adopting states to non-adopting states within the same region of the country. This matters because crime trends in the South and crime trends in the Northeast can move in very different directions for reasons that have nothing to do with self-defense law. Second, they added controls for things that change over time within states, such as how many police officers there are, how many people are in prison, how the local economy is doing, and what the demographic composition looks like.
+
+### Potential Outcomes Notation and Identification
+
+Let $i$ be the state, and $t$ be the calendar year. Let $CDL_{it}$ be the proportion of year $t$ in which state $i$ had an effective Castle Doctrine law in place, equal to zero for all non-adopting states. Each state has two potential outcomes: $Y_{it}(1)$, the crime rate if the state adopted Castle Doctrine, and $Y_{it}(0)$, the crime rate if it did not. We only ever observe one of these at a time, so the actual observed outcome is:
+
+$$Y_{it} = CDL_{it} \cdot Y_{it}(1) + (1 - CDL_{it}) \cdot Y_{it}(0)$$
+
+The ideal target parameter, the ATT, is the average mortality reduction for those who actually got the treatment:
+
+$$ATT = E[Y_{it}(1) - Y_{it}(0) \mid CDL_{it} > 0]$$
+
+The big problem is $Y_{it}(0)$: what homicide rate would have looked like for people in expansion states if their state never passed the Castle Doctrine law? That counterfactual isn't observed after 2014. It's the core challenge here. And because adopting states were already different from non-adopting states in ways that affect crime, we cannot simply use non-adopting states as controls. In potential-outcomes terms:
+
+$$E[Y_{it}(0) \mid CDL_{it} > 0] \neq E[Y_{it}(0) \mid CDL_{it} = 0]$$
+
+In other words, even without expansion, expansion and non-expansion states wouldn't have followed the same crime path, so a simple cross-state comparison would be misleading.
+
+Difference-in-differences (DiD) tackles this by using the pre-to-post change in non-expansion states as a stand-in for what would have happened in expansion states absent the policy:
+
+$$\hat{ATT}_{DiD} = \underbrace{\left(E[Y_{it} \mid CDL>0, Post=1] - E[Y_{it} \mid CDL>0, Post=0]\right)}_{\text{change in adopting states}} - \underbrace{\left(E[Y_{it} \mid CDL=0, Post=1] - E[Y_{it} \mid CDL=0, Post=0]\right)}_{\text{change in non-adopting states}}$$
+
+The authors estimate this with an event-study approach that traces mortality year by year instead of collapsing everything into a single post period:
+
+$$\log(\text{Outcome}_{it}) = \alpha_0 CDL_{it} + \alpha_1 X_{it} + c_i + u_t + \lambda_{rt} + \varepsilon_{it}$$
+
+where $c_i$ are state fixed effects, $u_t$ are year fixed effects, $\lambda_{rt}$ are Census region-by-year fixed effects, and $X_{it}$ is a vector of time-varying controls. Standard errors are clustered at the state level to account for the fact that observations within the same state over time are not independent of each other.
+
+### Assumptions
+
+Two important assumptions are needed for DiD to estimate ATT. These are:
+
+**1. Parallel Trends**
+
+This assumption states that in the absence of Castle Doctrine laws, the homicide trend would have remained the same in both states that expanded and in states that did not:
+
+$$E[Y_{it}(0) \mid CDL>0, Post=1] - E[Y_{it}(0) \mid CDL>0, Post=0] = E[Y_{it}(0) \mid CDL=0, Post=1] - E[Y_{it}(0) \mid CDL=0, Post=0]$$
+
+The authors showed graphical evidence from Figure 1 that homicide rates in adopting and non-adopting states followed similar trajectories in the years before the law passed. They also run statistical tests that compared the rate of crime in both states and showed it to be close to zero and statistically insignificant.
+
+**2. No Anticipation**
+
+The second assumption is no anticipation. This states that the health behavior of individuals did not change until the law actually took effect. criminals and potential victims did not start adjusting their behavior the moment they heard a Castle Doctrine law was coming. If this happened pre-period, the homicide rate would have already shifted. The authors stated that they fulfilled this assumption, arguing that laws were to protect individuals already in self-defense situations, not to send a broad public signal about crime deterrence. Furthermore, the pretreatment coefficients support that there was no spike or reduction in crime rate right before adoption in both states.
+
+$$Y_{it}(1) = Y_{it}(0) \quad \forall \; t < t_i^*$$
+
+### Assumptions for the Estimate to Correspond to the Empirical Estimand
+
+Even if DiD is a valid estimator, the regression estimate also needs to fulfill the following assumptions. These are:
+
+1. The linear probability model should show a reasonable approximation between the treatment and the dependent variable. The authors checked the same models using a negative binomial specification, which handles count data differently and does not impose a log-linear relationship, and yielded supporting results.
+
+2. The treatment was coded as the proportion of the year the law was adopted. States that adopted halfway through a year receive a fractional value, not zero or one. For example, Florida adopted on October 1, 2005, so it was coded as 0.25 for that year — representing 3 out of 12 months. This introduces a small amount of measurement imprecision. The authors tested whether this matters by dropping the year of adoption entirely and re-running the regressions. The estimates were nearly identical, which suggests this coding choice does not meaningfully affect the results.
+
+### Threats to Assumptions
+
+**a. Threats to Parallel Trends**
+
+For parallel trends, the main threat is the differential regional crime trend. As mentioned above, the adopting states were concentrated in the South and Midwest; they may have been on different crime trajectories for reasons that had nothing to do with Castle Doctrine. To control for this, the authors conducted the region-by-year fixed effects in their preferred specification. They looked at motor vehicle theft: without region-by-year fixed effects, Castle Doctrine appears to increase motor vehicle theft by 5 to 8 percent. Once regional trends were controlled for, that estimate dropped to zero. The other challenge is whether co-occurring policies affected the outcome. The authors addressed this by adding the full set of time-varying controls. The result from this analysis showed that the estimates remained stable, which suggests these observed factors were not systematically correlated with adoption timing. The study was also staggered, meaning the states adopted the policy in different years, in which the standard two-way fixed effects estimator would be biased if treatment effects vary across adoption categories. This was addressed through 1,000 placebo simulations using pre-Castle Doctrine data. The actual estimate showed that it falls in the 95th percentile of the placebo distribution, meaning that the effect was not significant.
+
+**b. Threats to No Anticipation**
+
+For no anticipation: this is when individuals in states start to act aggressively by anticipating the impact of the law. Potential victims might have started acting more aggressively, or potential offenders might have started avoiding certain confrontations, once they heard the law was coming. The authors did not test this, but the pre-adoption coefficients from four or more years before adoption through one year before adoption are consistently close to zero across all specifications. This shows that the assumption holds.
+
+## Part 2: Replication
+
+### What I am Replicating
+
+I replicate Table 5 Panel A Column 3 from Cheng and Hoekstra (2013), which is the paper's central result: the effect of Castle Doctrine laws on the log homicide rate using population-weighted OLS with state fixed effects, year fixed effects, region-by-year fixed effects, and time-varying controls. The published coefficient is 0.0937 significant at the 1 percent level, meaning Castle Doctrine laws increased homicide rates by approximately 9.4 percent. I also reproduce an event study plot showing the divergence in homicide rates before and after adoption, similar to Figure 4 in the paper.
+
+The data used are from the `castle` dataset distributed through Scott Cunningham's *Causal Inference: The Mixtape* (2021) and available in the `causaldata` R package. This dataset contains state-year panel data on homicide rates and Castle Doctrine adoption from 2000 to 2010 for all 50 US states. Since the original paper uses restricted FBI Master files and population weights not fully available in the public dataset, exact replication of every decimal is not expected. 
+
+```{r packages, message=FALSE, warning=FALSE}
+# install.packages(c("causaldata","fixest","bacondecomp","did","ggplot2","dplyr","modelsummary"))
+
+library(causaldata)
+library(fixest)
+library(bacondecomp)
+library(did)
+library(ggplot2)
+library(dplyr)
+library(modelsummary)
+```
+
+```{r load-data}
+data(castle)
+glimpse(castle)
+```
+
+```{r data-prep}
+castle <- castle %>%
+  mutate(
+    effyear_clean = ifelse(is.na(effyear), 0, effyear),
+    region = case_when(
+      northeast == 1 ~ "northeast",
+      midwest   == 1 ~ "midwest",
+      south     == 1 ~ "south",
+      west      == 1 ~ "west"
+    ),
+    region_year = paste(region, year, sep = "_")
+  )
+
+cat("States:", length(unique(castle$sid)), "\n")
+cat("Years:", min(castle$year), "to", max(castle$year), "\n")
+cat("Adopting states:", length(unique(castle$sid[castle$effyear_clean > 0])), "\n")
+cat("Never-treated states:", length(unique(castle$sid[castle$effyear_clean == 0])), "\n")
+```
+
+```{r replication-table}
+model_col1 <- feols(
+  l_homicide ~ cdl | sid + year,
+  data    = castle,
+  weights = ~popwt,
+  cluster = ~sid
+)
+
+model_col2 <- feols(
+  l_homicide ~ cdl | sid + year + region_year,
+  data    = castle,
+  weights = ~popwt,
+  cluster = ~sid
+)
+
+model_col3 <- feols(
+  l_homicide ~ cdl +
+    l_police + l_income + unemployrt +
+    l_prisoner + l_lagprisoner +
+    l_exp_subsidy + l_exp_pubwelfare +
+    blackm_15_24 + whitem_15_24 +
+    blackm_25_44 + whitem_25_44 |
+    sid + year + region_year,
+  data    = castle,
+  weights = ~popwt,
+  cluster = ~sid
+)
+
+modelsummary(
+  list(
+    "Col 1: State + Year FE"        = model_col1,
+    "Col 2: + Region-Year FE"       = model_col2,
+    "Col 3: + Controls (Preferred)" = model_col3
+  ),
+  stars    = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+  coef_map = c("cdl" = "Castle Doctrine Law"),
+  gof_map  = c("nobs", "r.squared"),
+  title    = "Replication of Table 5 Panel A: Effect of Castle Doctrine on Log Homicide Rate (OLS Weighted)",
+  notes    = "Robust standard errors clustered at the state level.
+              Published estimates: Col 1 = 0.0801**, Col 2 = 0.0946***, Col 3 = 0.0937***"
+)
+```
+
+
+### Discussion of Replication Results
+
+The replication produces results consistent with the published findings. The preferred specification in Column 3 yields a positive and statistically significant coefficient on the Castle Doctrine Law indicator, indicating that states adopting Castle Doctrine experienced higher homicide rates relative to non-adopting states in the same Census region after controlling for time-varying economic and demographic factors. The magnitude is close to the published estimate of 9.37 percent. Minor differences arise because the public dataset does not include every restricted variable from the original FBI Master files. 
+
+## Part 3: Extensions
+
+The three extensions below assess whether the main finding holds up under modern DiD methodology. All three speak directly to the identification assumptions discussed in Part 1.
+
+### Extension 1: Goodman-Bacon Decomposition
+
+**Why this extension matters**
+for the extesnion part, I comsidered three different extensions.The first one is Goodman-Bacon Decompositionthe authors use staggered DiD design with states adopting the law in  five different years from 2005 to 2009. The paper was published in 2013 before Goodman-Bacon (2021) showed that the standard two-way fixed effects estimator in staggered DiD designs is a weighted average of all possible 2x2 DiD comparisons. The decomposition tells us how much of the main result depends on clean treated-vs-never-treated comparisons versus potentially contaminated already-treated-vs-later-treated comparisons. This is a direct empirical test of the staggered timing threat to parallel trends discussed in Part 1.
+
+```{r goodman-bacon}
+castle_bacon <- castle %>%
+  mutate(
+    treated = as.integer(!is.na(effyear) & year >= effyear)
+  ) %>%
+  filter(!is.na(l_homicide)) %>%
+  arrange(sid, year)
+
+bacon_out <- bacon(
+  l_homicide ~ treated,
+  data      = castle_bacon,
+  id_var    = "sid",
+  time_var  = "year",
+  quietly   = FALSE
+)
+
+bacon_summary <- bacon_out %>%
+  group_by(type) %>%
+  summarise(
+    total_weight      = round(sum(weight), 3),
+    weighted_estimate = round(sum(weight * estimate) / sum(weight), 4),
+    n_comparisons     = n()
+  ) %>%
+  arrange(desc(total_weight))
+
+cat("\nGoodman-Bacon Decomposition Summary:\n")
+print(bacon_summary)
+
+twfe_from_decomp <- sum(bacon_out$weight * bacon_out$estimate)
+cat("\nOverall TWFE estimate reconstructed from decomposition:", round(twfe_from_decomp, 4), "\n")
+
+ggplot(bacon_out, aes(x = weight, y = estimate, color = type, shape = type)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("darkblue", "darkred", "darkgreen")) +
+  labs(
+    title    = "Goodman-Bacon Decomposition",
+    subtitle = "Each point is a 2x2 DiD comparison weighted by its contribution to the TWFE estimate",
+    x        = "Weight in TWFE Estimator",
+    y        = "2x2 DiD Estimate",
+    color    = "Comparison Type",
+    shape    = "Comparison Type"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+**Interpretation**
+The result shows that 90.8 percent of the TWFE estimate comes from the treated versus never-treated comparison, with an estimate of 0.088. This is the clean comparison the parallel trends assumption is built for. The contaminated comparisons (earlier versus later treated and later versus earlier treated) together carry less than 10 percent of the weight and their estimates are small. This means the staggered timing concern raised in Part 1 is not a real problem here. The main finding is still valid. 
+
+
+### Extension 2: Callaway and Sant'Anna Estimator
+
+**Why this extension matters**
+
+The result from Goodman-Bacon decomposition showed that most of the TWFE estimate comes from clean comparisons, but it does not fully fix the staggered timing problem. it only diagnoses it.
+The Callaway and Sant'Anna estinates the effects separately for each adoption cohort and uses never-treated states as controls. This means no already-treated state is ever used as a comparison for a later-treated state. If the overall ATT from this estimator is close to the original TWFE estimate of 0.093, it assures us the main finding is not an due to staggered timing. if it differs significantly, it raises concerns. This is a stronger and more direct test than the 1,000 placebo simulations the original paper used to address the same threat. 
+
+```{r callaway-santanna}
+castle_cs <- castle %>%
+  mutate(
+    first_treat = ifelse(is.na(effyear), 0, effyear)
+  ) %>%
+  filter(!is.na(l_homicide))
+
+cs_out <- att_gt(
+  yname         = "l_homicide",
+  tname         = "year",
+  idname        = "sid",
+  gname         = "first_treat",
+  data          = castle_cs,
+  control_group = "nevertreated",
+  est_method    = "reg",
+  clustervars   = "sid"
+)
+
+cs_overall <- aggte(cs_out, type = "simple")
+cat("\nCallaway-SantAnna Overall ATT:\n")
+summary(cs_overall)
+
+cs_dynamic <- aggte(cs_out, type = "dynamic")
+cat("\nCallaway-SantAnna Dynamic ATT:\n")
+summary(cs_dynamic)
+
+ggdid(cs_dynamic,
+      title = "Callaway-Sant'Anna Event Study: Effect of Castle Doctrine on Log Homicide Rate",
+      ylab  = "ATT Estimate",
+      xlab  = "Event Time (Years Relative to Adoption)")
+```
+
+**Interpretation**
+
+The Callaway-Sant'Anna overall ATT is 0.110, statistically significant with a 95 percent confidence interval of 0.036 to 0.185. This is slightly larger than the original TWFE estimate of 0.093 but in the same direction and equally significant. The dynamic aggregation gives almost the identical result at 0.110. Using only never-treated states as controls and avoiding any contaminated comparisons, the estimator still finds that Castle Doctrine laws increased homicide rates by approximately 11 percent. The event study plot supports this pre-period coefficients from t=-5 through t=-1 are close to zero and statistically insignificant, while post-period coefficients are consistently positive. The two extreme pre-period points at t=-8 and t=-7 have very wide confidence intervals reflecting very few observations and should not be read as evidence of pre-trends. Overall, the Callaway-Sant'Anna results confirm that the original finding is not an artifact of staggered timing. The main finding holds
+
+### Extension 3: Heterogeneous Effects by Law Strength
+
+**Why this extension matters**
+
+The paper treats all 21 adopting states as receiving the same treatment, but the law type varied across states. out of states that adopted the law, Seventeen states removed the duty to retreat in any place one has a legal right to be, while four made narrower changes. Thirteen states added a presumption of reasonable fear, and eighteen removed civil liability. In causal inference terms, this raises a version of the SUTVA concern: there may not be a single well-defined treatment if the laws differ meaningfully in their scope. If treatment effect sizes vary systematically with law strength, the pooled estimate is an average across heterogeneous interventions, and the policy implication depends on which version of the law is being considered. This extension tests whether the homicide effect is concentrated among states with the strongest versions of the law or is present across all variants.
+
+```{r heterogeneous-effects}
+strong_states <- c("Alabama", "Alaska", "Arizona", "Florida", "Georgia",
+                   "Indiana", "Kansas", "Kentucky", "Louisiana", "Michigan",
+                   "Mississippi", "Montana", "Oklahoma", "South Carolina",
+                   "South Dakota", "Tennessee", "Texas")
+
+limited_states <- c("Missouri", "North Dakota", "Ohio", "West Virginia")
+
+model_strong <- feols(
+  l_homicide ~ cdl +
+    l_police + l_income + unemployrt +
+    l_prisoner + l_lagprisoner +
+    l_exp_subsidy + l_exp_pubwelfare +
+    blackm_15_24 + whitem_15_24 +
+    blackm_25_44 + whitem_25_44 |
+    sid + year + region_year,
+  data    = castle %>% filter(effyear_clean == 0 | state %in% strong_states),
+  weights = ~popwt,
+  cluster = ~sid
+)
+
+model_limited <- feols(
+  l_homicide ~ cdl +
+    l_police + l_income + unemployrt +
+    l_prisoner + l_lagprisoner +
+    l_exp_subsidy + l_exp_pubwelfare +
+    blackm_15_24 + whitem_15_24 +
+    blackm_25_44 + whitem_25_44 |
+    sid + year + region_year,
+  data    = castle %>% filter(effyear_clean == 0 | state %in% limited_states),
+  weights = ~popwt,
+  cluster = ~sid
+)
+
+modelsummary(
+  list(
+    "All Adopters (21 states)"              = model_col3,
+    "Removed Duty to Retreat Anywhere (17)" = model_strong,
+    "Limited Law Changes (4)"               = model_limited
+  ),
+  stars    = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+  coef_map = c("cdl" = "Castle Doctrine Law"),
+  gof_map  = c("nobs", "r.squared"),
+  title    = "Heterogeneous Effects by Law Strength",
+  notes    = "Robust standard errors clustered at the state level.
+              Strong law states removed the duty to retreat in any place one has a legal right to be.
+              Limited law states made narrower changes to self-defense law."
+)
+
+het_results <- data.frame(
+  group    = c("All Adopters\n(21 states)",
+               "Removed Duty to Retreat\nAnywhere (17 states)",
+               "Limited Law\nChanges (4 states)"),
+  estimate = c(coef(model_col3)["cdl"],
+               coef(model_strong)["cdl"],
+               coef(model_limited)["cdl"]),
+  se       = c(se(model_col3)["cdl"],
+               se(model_strong)["cdl"],
+               se(model_limited)["cdl"])
+) %>%
+  mutate(ci_low  = estimate - 1.96 * se,
+         ci_high = estimate + 1.96 * se)
+
+ggplot(het_results, aes(x = group, y = estimate)) +
+  geom_point(size = 4, color = "darkblue") +
+  geom_errorbar(aes(ymin = ci_low, ymax = ci_high),
+                width = 0.2, color = "darkblue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title    = "Heterogeneous Effects of Castle Doctrine by Law Strength",
+    subtitle = "Point estimates with 95% confidence intervals",
+    x        = "Group",
+    y        = "Effect on Log Homicide Rate"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation**
+The results show that all three groups experienced statistically significant increases in homicide rates after Castle Doctrine adoption, which tells us the effect is not confined to states that passed the strongest version of the law. The 17 states that removed the duty to retreat anywhere show an estimate of 0.079, slightly below the overall average of 0.093, while the 4 states with more limited law changes show the largest estimate at 0.245. This is the opposite of what you would expect if law strength was the main driver, but this group only has four states so the confidence interval is very wide and the estimate should not be over-interpreted. The main takeaway is that the homicide increase shows up across all variants of Castle Doctrine regardless of how broadly or narrowly the law was written, suggesting that the presence of the law itself matters more than the degree of legal change.
+
+## Conclusion
+
+This replication and extension project examined the causal effect of Castle Doctrine laws on homicide rates using the difference-in-differences design of Cheng and Hoekstra (2013). The replication confirmed the paper's central finding: states adopting Castle Doctrine experienced statistically significant increases in homicide rates of approximately 8 to 10 percent relative to non-adopting states in the same Census region, with flat pre-adoption trends supporting the parallel trends assumption. The three extensions tested whether this finding holds up under modern DiD scrutiny. The Goodman-Bacon decomposition showed that 90.8 percent of the TWFE estimate comes from clean treated-vs-never-treated comparisons, meaning the staggered timing concern raised in Part 1 is not a serious problem for this paper. The Callaway-Sant'Anna estimator, which uses only never-treated states as controls, produced an overall ATT of 0.110, slightly above the original estimate but in the same direction and equally significant, confirming the main finding is not an artifact of how the comparisons were constructed. The heterogeneous effects analysis found that the homicide increase is present across all variants of the law regardless of how broadly or narrowly self-defense rights were expanded, suggesting the presence of the law itself matters more than the degree of legal change. Taken together, the extensions suggest the main finding of Cheng and Hoekstra (2013) is broadly robust to modern methodological concerns. Lowering the expected cost of lethal force causes more of it, and that conclusion survives scrutiny.
